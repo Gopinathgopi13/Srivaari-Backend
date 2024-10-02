@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  role_id   String     @id @default(uuid())
+  role_name String     @unique()
+  UserRoles UserRole[]
+}
+
+model UserRole {
+  user_id    String
+  role_id    String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+  user       User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  role       Role     @relation(fields: [role_id], references: [role_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, role_id])
+}
+
+model User {
+  user_id       String     @id @default(uuid())
+  email         String     @unique
+  password      String
+  userName      String     @unique
+  first_name    String
+  last_name     String
+  isActive      Boolean    @default(false)
+  gender        String
+  mobile_number String
+  otp           Int
+  dob           DateTime?
+  token         String     @unique
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  address       Address[]
+  UserRole      UserRole[]
+  Cart          Cart[]
+  Wishlist      Wishlist[]
+}
+
+model Address {
+  address_id String   @id @default(uuid())
+  user_id    String
+  street     String
+  city       String
+  state      String
+  zip        String
+  country    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [user_id])
+}
+
+model ProductCategory {
+  category_id   String    @id @default(uuid())
+  category_name String
+  description   String?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  Product       Product[]
+}
+
+model Product {
+  product_id   String            @id @default(uuid())
+  product_name String
+  description  String
+  category_id  String
+  price        Decimal
+  discount_id  String?
+  inventory_id String?
+  created_at   DateTime          @default(now())
+  updated_at   DateTime          @updatedAt
+  category     ProductCategory   @relation(fields: [category_id], references: [category_id])
+  discout      Discount?         @relation(fields: [discount_id], references: [discount_id], onDelete: Cascade)
+  inventory    ProductInventory? @relation(fields: [inventory_id], references: [inventory_id])
+  Cart         Cart[]
+  Wishlist     Wishlist[]
+}
+
+model ProductInventory {
+  inventory_id String    @id @default(uuid())
+  quantity     Int
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  Product      Product[]
+}
+
+model Discount {
+  discount_id      String    @id @default(uuid())
+  discount_name    String
+  discount_percent Decimal
+  active           Boolean
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  Product          Product[]
+}
+
+model Cart {
+  cart_id    String  @id @default(uuid())
+  product_id String  @unique
+  user_id    String
+  quantity   Int?    @default(1)
+  user       User    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  product    Product @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Wishlist {
+  wishlist_id String  @id @default(uuid())
+  product_id  String  
+  user_id     String
+  user        User    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  product     Product @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: Cascade)
+}
